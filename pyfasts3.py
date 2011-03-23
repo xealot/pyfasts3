@@ -390,7 +390,7 @@ class FastS3(Loopback):
                 if key.etag[1:-1] != localmd5:
                     log.info('Overwriting File on S3 %s.' % s3name)
                     key.set_contents_from_filename(path, replace=True,
-                                                   headers={'Content-Type': content_type}))
+                                                   headers={'Content-Type': content_type})
         log.debug('S3 WRITE BACK complete')
                 
     @staticmethod
