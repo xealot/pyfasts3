@@ -478,9 +478,6 @@ def sync(root, bucket):
     def check_and_sync(key):
         filename = realpath(join(root, key.name))
         path, name = split(filename)
-        if not isdir(path):
-            log.info('Creating Directory %s.' % path)
-            os.makedirs(path)
         if not key.name.endswith('/'):
             if not isfile(filename):
                 log.info('Creating File %s.' % name)
@@ -496,6 +493,11 @@ def sync(root, bucket):
     files = bucket.list()
     for key in files:
         #Create local directory and files structure based on S3 bucket.
+        filename = realpath(join(root, key.name))
+        path, name = split(filename)
+        if not isdir(path):
+            log.info('Creating Directory %s.' % path)
+            os.makedirs(path)
         sync_pool.add_task(check_and_sync, key)
     sync_pool.wait_completion()
 
