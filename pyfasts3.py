@@ -285,17 +285,17 @@ class FastS3(Loopback):
         with FileLock(path):
             checked = self.opcache.get('getattr-check', path)
             if checked is None:
+                # If filename doesn't end with a /, the list op should only return a single entry.
                 filename = FastS3.local_to_s3(self.root, path)
                 log.debug('Checking for missing file on S3: %s' % filename)
-                key = bucket.get_key(filename)
-                if key is not None:
-                    key.get_contents_to_filename(path)
-                else:
-                    #Check for directory
-                    log.debug('Checking for missing dir on S3: %s' % filename+'/')
-                    key = bucket.get_key(filename+'/')
-                    if key is not None:
+                files = bucket.list(prefix=filename, delimiter='/')
+                for f in files:
+                    if isinstance(f, Prefix):
+                        log.info('Creating directory: %s' % path)
                         os.makedirs(path)
+                    else:
+                        log.info('Creating file: %s' % path)
+                        f.get_contents_to_filename(path)
                 self.opcache.set('getattr-check', path, True)
         return super(FastS3, self).getattr(path, *args)
 
