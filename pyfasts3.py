@@ -536,7 +536,7 @@ if __name__ == '__main__':
     operation_cache = OpCache()
 
     signal.signal(signal.SIGINT, signal.SIG_DFL) #Restores CTRL+C functionality
-    fuse = FUSE(FastS3(arglist.cache, bucket), arglist.mount, foreground=True)
+    fuse = FUSE(FastS3(arglist.cache, bucket), arglist.mount, foreground=True, allow_other=True)
 
 
 
