@@ -472,32 +472,30 @@ class FastS3(Loopback):
 
 def sync(root, bucket):
     """ Sync root local FS with specified bucket """
-    log.info('Performing synchronization of %s -> %s.' % (root, bucket.name))
+    log.info('Performing synchronization of %s -> %s' % (root, bucket.name))
     sync_pool = ThreadPool(5)
     
     def check_and_sync(key):
         filename = realpath(join(root, key.name))
         path, name = split(filename)
+        if not isdir(path):
+            log.info('Creating Directory %s' % path)
+            os.makedirs(path)
         if not key.name.endswith('/'):
             if not isfile(filename):
-                log.info('Creating File %s.' % name)
+                log.info('Creating File %s' % key.name)
                 key.get_contents_to_filename(filename)
             else:
                 #Check file for correct content.
                 with open(filename, 'rb') as f:
                     localmd5 = key.compute_md5(f)[0]
                 if key.etag[1:-1] != localmd5:
-                    log.info('Overwriting File %s from S3.' % name)
+                    log.info('Overwriting File %s from S3.' % key.name)
                     key.get_contents_to_filename(filename)
     
     files = bucket.list()
     for key in files:
         #Create local directory and files structure based on S3 bucket.
-        filename = realpath(join(root, key.name))
-        path, name = split(filename)
-        if not isdir(path):
-            log.info('Creating Directory %s.' % path)
-            os.makedirs(path)
         sync_pool.add_task(check_and_sync, key)
     sync_pool.wait_completion()
 
